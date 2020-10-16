@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs-extra');
 const fileUpload = require('express-fileupload')
+
 const MongoClient = require('mongodb').MongoClient;
 require('dotenv').config()
 
@@ -11,11 +12,13 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 const app = express()
 
-app.use(bodyParser.json());
+// app.use(bodyParser.json());
 app.use(cors());
 app.use(express.static('images'))
 app.use(fileUpload())
 
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 const port = 5000;
 
 app.get('/', (req, res) => {
@@ -36,9 +39,12 @@ client.connect(err => {
       })
   })
   // Customer All Orders
-  app.get('/showclientorders', (req, res) => {
-    ordersCollection.find({})
-      .toArray((err, document) => {
+  app.post('/showclientorders', (req, res) => {
+    const email = req.body.email
+    console.log(email);
+    ordersCollection.find({email: email})
+      .toArray((err, document) => { 
+        console.log(document);
         res.send(document)
       })
   })
