@@ -41,21 +41,20 @@ client.connect(err => {
   // Customer All Orders
   app.post('/showclientorders', (req, res) => {
     const email = req.body.email
-    console.log(email);
-    ordersCollection.find({email: email})
-      .toArray((err, document) => { 
+    ordersCollection.find({ email: email })
+      .toArray((err, document) => {
         console.log(document);
         res.send(document)
       })
   })
 
-    // Admin Show All Orders
-    app.get('/showAllOrders', (req, res) => {
-      ordersCollection.find({})
-        .toArray((err, document) => {
-          res.send(document)
-        })
-    })
+  // Admin Show All Orders
+  app.get('/showAllOrders', (req, res) => {
+    ordersCollection.find({})
+      .toArray((err, document) => {
+        res.send(document)
+      })
+  })
 
   //Home
   app.get('/getAllReviews', (req, res) => {
@@ -88,7 +87,6 @@ client.connect(err => {
     const data = req.body
     ordersCollection.insertMany(data)
       .then(result => {
-        console.log(result.insertedCount);
         res.send(result.insertedCount > 0)
       })
   })
@@ -96,27 +94,17 @@ client.connect(err => {
   //create customer review
   app.post('/addReview', (req, res) => {
     const data = req.body
-    console.log(data);
     reviewsCollection.insertOne(data)
       .then(result => {
-        console.log(result.insertedCount);
         res.send(result.insertedCount > 0)
       })
   })
 
   //save a image from client to server
   app.post('/addOrder', (req, res) => {
-    console.log("Hitted");
     const file = req.files.file;
     const { name, email, userName, description } = req.body
-
-    const filePath = `${__dirname}/images/${file.name}`
-    file.mv(filePath, err => {
-      if (err) {
-        console.log(err);
-        res.status(500).send({ msg: "Failed to upload image" })
-      }
-      const newImg = fs.readFileSync(filePath)
+      const newImg = file.data
       const encImg = newImg.toString('base64')
 
       var image = {
@@ -125,59 +113,31 @@ client.connect(err => {
         img: Buffer.from(encImg, 'base64')
       };
       const newOrder = { name, email, userName, description, image }
-      console.log(newOrder);
       ordersCollection.insertOne(newOrder)
         .then(result => {
-          fs.remove(filePath, error => {
-            if (error) {
-              console.log(error);
-            }
-            res.send(result.insertedCount > 0)
-          })
-
+          res.send(result.insertedCount > 0)         
         })
-      // return res.send({name:file.name, path:`/${file.name}`})
-    })
-
   })
 
   //Add A Service admin part
   app.post('/addAService', (req, res) => {
-    console.log("Hitted");
     const file = req.files.file;
     const { name, description } = req.body
+    const newImg = file.data;
+    const encImg = newImg.toString('base64')
 
-    const filePath = `${__dirname}/images/${file.name}`
-    file.mv(filePath, err => {
-      if (err) {
-        console.log(err);
-        res.status(500).send({ msg: "Failed to upload image" })
-      }
-      const newImg = fs.readFileSync(filePath)
-      const encImg = newImg.toString('base64')
+    var image = {
+      contentType: file.mimetype,
+      size: file.size,
+      img: Buffer.from(encImg, 'base64')
+    };
+    const newOrder = { name, description, image }
+    servicesCollection.insertOne(newOrder)
+      .then(result => {
+        res.send(result.insertedCount > 0)
 
-      var image = {
-        contentType: file.mimetype,
-        size: file.size,
-        img: Buffer.from(encImg, 'base64')
-      };
-      const newOrder = { name, description, image }
-      console.log(newOrder);
-      servicesCollection.insertOne(newOrder)
-        .then(result => {
-          fs.remove(filePath, error => {
-            if (error) {
-              console.log(error);
-            }
-            res.send(result.insertedCount > 0)
-          })
-
-        })
-      // return res.send({name:file.name, path:`/${file.name}`})
-    })
-
+      })
   })
-
   console.log("Database Connection established");
 });
 
